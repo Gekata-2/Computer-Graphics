@@ -1,8 +1,8 @@
 #include "Filters.h"
 template <class T>
-T clamp(T value,T max,T min)
+T clamp(T value, T max, T min)
 {
-	if (value > max) 
+	if (value > max)
 	{
 		return max;
 	}
@@ -32,4 +32,31 @@ QColor InvertFilter::calcNewPixelColor(const QImage& img, int x, int y) const
 	QColor color = img.pixelColor(x, y);
 	color.setRgb(255 - color.red(), 255 - color.green(), 255 - color.blue());
 	return color;
+}
+
+
+
+
+
+QColor MatrixFilter::calcNewPixelColor(const QImage& img, int x, int y) const
+{
+	float returnR = 0;
+	float returnG = 0;
+	float returnB = 0;
+	int size = mKernel.getSize();
+	int radius = mKernel.getRadius();
+	for (int i = -radius; i <= radius; i++)
+	{
+		for (int j = -radius; j <= radius; j++)
+		{
+			int idx = (i + radius) * size + j + radius;
+
+			QColor color = img.pixelColor(clamp<float>(x + j, img.width() - 1, 0), clamp<float>(y + i, img.height() - 1, 0));
+
+			returnR += color.red() * mKernel[idx];
+			returnG += color.green() * mKernel[idx];
+			returnB += color.blue() * mKernel[idx];
+		}
+	}
+	return QColor(clamp<float>(returnR, 255.f, 0.f), clamp<float>(returnG, 255.f, 0.f), clamp<float>(returnB, 255.f, 0.f));
 }
