@@ -1,5 +1,9 @@
 #pragma once
 #include <QImage>
+
+template <class T>
+T clamp(T value, T max, T min);
+
 class Filter
 {
 protected:
@@ -18,26 +22,32 @@ class InvertFilter :public Filter
 class Kernel
 {
 protected:
-	std::unique_ptr<float[]> data;
-
+	//данные ядра
+	std::unique_ptr<float[]> data;//массив флотов
+	//радиус ядра
 	std::size_t radius;
 
-
+	//размер памяти ядра
 	std::size_t getLen() const
 	{
 		return getSize() * getSize();
 	}
 
 public:
+	//конструктор пустого ядра
 	Kernel(std::size_t radius) :radius(radius)
 	{
+		//выделение памяти под массив размера getLen()
 		data = std::make_unique<float[]>(getLen());
 	}
 
+	//конструктор копирования
 	Kernel(const Kernel& other) : Kernel(other.radius)
 	{
 		std::copy(other.data.get(), other.data.get() + getLen(), data.get());
 	}
+
+	//аксессоры
 	std::size_t getRadius() const
 	{
 		return radius;
@@ -54,4 +64,20 @@ public:
 	{
 		return data[id];
 	}
+};
+
+//класс ,реализующий выисление операции свёртки с ядром
+class MatrixFilter : public Filter
+{
+protected:
+
+	Kernel mKernel;
+	QColor calcNewPixelColor(const QImage& img, int x, int y) const override;
+
+public:
+	MatrixFilter(const Kernel& kernel) : mKernel(kernel)
+	{
+
+	}
+	virtual ~MatrixFilter() = default;
 };
