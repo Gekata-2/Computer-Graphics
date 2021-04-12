@@ -263,7 +263,7 @@ protected:
 	} typedef KL;
 public:
 	virtual KL calcNewPixelLocation(int x, int y) const =0 ;
-	QImage process(const QImage& img) const;
+	virtual QImage process(const QImage& img) const;
 	virtual ~LocationFilter() = default;
 };
 
@@ -272,4 +272,11 @@ class ShiftFilter : public LocationFilter
 public:
 	KL calcNewPixelLocation(int x, int y) const override;
 	
+};
+
+class GlassFilter : public LocationFilter
+{
+public:
+	QImage process(const QImage& img) const;
+	KL calcNewPixelLocation(int x, int y) const;
 };
