@@ -322,16 +322,28 @@ QImage LocationFilter::process(const QImage& img) const
 
 			QColor black_color;
 				black_color.setRgb(0, 0, 0);
-				if (result_kl.k >= img.width())
+				//больше границ
+				if 	(result_kl.k >= img.width())
 				{
 					result_kl.k = result_kl.k % img.width();
 					color = black_color;
 				}
+				if (result_kl.k < 0)
+				{
+					result_kl.k = img.width() + result_kl.k;//result_kl.k<0
+					color = black_color;
+				}
+				//меньше границ
 				if (result_kl.l >= img.height())
 				{
 					result_kl.l = result_kl.l % img.height();
 					color = black_color;
-				}					
+				}	
+				if (result_kl.l < 0)
+				{
+					result_kl.l = img.height() + result_kl.l;//result_kl.l<0
+						color = black_color;
+				}
 			//записываем в полученное местоположение цвет текущего пикселя
 			result.setPixelColor(result_kl.k, result_kl.l, color);
 		}
@@ -353,6 +365,64 @@ LocationFilter::KL ShiftFilter::calcNewPixelLocation(int x, int y) const
 	result.l = y-250;
 	return result;
 }
+
+
+
+
+
+QImage GlassFilter::process(const QImage& img) const
+{
+	QImage result(img);//создаём переменную-картинку-результат
+	//проходим каждый пикслей в цикле 
+	for (int x = 0; x < img.width(); x++)
+	{
+		for (int y = 0; y < img.height(); y++)
+		{
+
+			QColor color = img.pixelColor(x, y);//считываем цвет текущего пиксле (x,y) исходного изображения
+			KL result_kl = calcNewPixelLocation(x, y);//высчитываем его положение в новой картинке (x,y) - > (k,l)
+			//больше границ
+			if (result_kl.k >= img.width())
+			{
+				result_kl.k = img.width()-1;				
+			}
+			if (result_kl.k <= 0)
+			{
+				result_kl.k = 0;//result_kl.k<0
+			
+			}
+			//меньше границ
+			if (result_kl.l >= img.height())
+			{
+				result_kl.l =img.height()-1;
+			
+			}
+			if (result_kl.l <= 0)
+			{
+				result_kl.l = 0;//result_kl.l<0
+			}
+			//записываем в полученное местоположение цвет текущего пикселя
+			result.setPixelColor(result_kl.k, result_kl.l, color);
+		}
+	}
+	//возвращаем полученное изображение
+	return result;
+}
+
+
+
+/*
+		𝑥(𝑘, 𝑙) = 𝑘 + (𝑟𝑎𝑛𝑑(1) – 0.5) ∗ 10;
+		𝑦(𝑘, 𝑙) = 𝑙 + (𝑟𝑎𝑛𝑑(1) – 0.5) ∗ 10;
+*/
+LocationFilter::KL GlassFilter::calcNewPixelLocation(int x, int y) const
+{
+	KL result;
+	result.k = x+ (rand()%6-3)*10;
+	result.l = y +(rand()%6-3)*10;
+	return result;
+}
+
 
 
 
