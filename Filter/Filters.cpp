@@ -424,5 +424,197 @@ LocationFilter::KL GlassFilter::calcNewPixelLocation(int x, int y) const
 }
 
 
+QColor BlackWhiteFilter::calcNewPixelColor(const QImage& img, int x, int y) const
+{
+	float intensity_max, intensity_min;
+	intensity_max = 0.299 * 255 + 0.587 * 255 + 0.144 * 255;
+	//берём значения цвета текущего пикселя
+	QColor color = img.pixelColor(x, y);
+	QColor black_color;
+	black_color.setRgb(0, 0, 0);
+	QColor white_color;
+	white_color.setRgb(255, 255, 255);
+	//расчитываем яркость(интенсивность)
+	float intensity = 0.299 * color.red() + 0.587 * color.green() + 0.144 * color.blue();
+	
+	if (intensity> intensity_max/(2.5f))
+	{
+		color = white_color;
+	}
+	else
+	{
+		color = black_color;
+	}
+	
+	//устанавливаем во все каналы полученное значение
+	color.setRgb(clamp<float>(color.red(), 255.f, 0.f), clamp<float>(color.green(), 255.f, 0.f), clamp<float>(color.blue(), 255.f, 0.f));
+	return color;
+}
 
+
+QImage DilationFilter::process(const QImage& img) const
+{
+	QImage result(img);//создаём переменную-картинку-результат
+	
+	int mask_width=1, mask_height = 1;
+	int mask_radius = 0;
+	mask_radius = mKernel.getRadius();
+	
+	//img.convertToFormat(QImage::Format_Mono);
+	for (int x = mask_radius; x < img.width()- mask_radius ; x++)
+	{
+		for (int y = mask_radius; y < img.height()- mask_radius; y++)
+		{
+			//создаём "переменную-результат"-"color" работы функции обработки цвета текущего пикселя
+			//(в новой картинке)
+			QColor color = calcNewPixelColor(img, x, y);
+			//в результирующей картинке устанавливаем этот пиксель(x,y) в новый цвет color
+			result.setPixelColor(x, y, color);
+		}
+	}
+	return result;
+}
+
+
+QColor DilationFilter::calcNewPixelColor(const QImage& img, int x, int y) const
+{
+	QColor result;
+
+	int max=0;
+
+
+	int size = mKernel.getSize();//получаем размер
+	int radius = mKernel.getRadius();//радиус
+
+
+	for (int i = -radius; i < radius; i++)
+	{
+		for (int j = -radius; j < radius; j++)
+		{
+			QColor tmp_color = img.pixelColor(x+i, y+j);
+			float tmp_intensity = 0;
+
+			int idx = (i + radius) * size + j + radius;
+			if ((mKernel[idx]) && (tmp_color.red() > max)&& (tmp_color.green() > max)&& (tmp_color.blue() > max))
+			{				
+				max = 255;			
+			}
+		}
+	}
+	result.setRgb(clamp<float>(max, 255.f, 0.f), clamp<float>(max, 255.f, 0.f), clamp<float>(max, 255.f, 0.f));
+	return result;
+}
+
+
+/**/
+
+QImage ErosionFilter::process(const QImage& img) const
+{
+	QImage result(img);//создаём переменную-картинку-результат
+
+	int mask_width = 1, mask_height = 1;
+	int mask_radius = 0;
+	mask_radius = mKernel.getRadius();
+
+	//img.convertToFormat(QImage::Format_Mono);
+	for (int x = mask_radius; x < img.width() - mask_radius; x++)
+	{
+		for (int y = mask_radius; y < img.height() - mask_radius; y++)
+		{
+			//создаём "переменную-результат"-"color" работы функции обработки цвета текущего пикселя
+			//(в новой картинке)
+			QColor color = calcNewPixelColor(img, x, y);
+			//в результирующей картинке устанавливаем этот пиксель(x,y) в новый цвет color
+			result.setPixelColor(x, y, color);
+		}
+	}
+	return result;
+}
+
+
+QColor ErosionFilter::calcNewPixelColor(const QImage& img, int x, int y) const
+{
+	QColor result;
+
+	int min = 255;
+
+
+	int size = mKernel.getSize();//получаем размер
+	int radius = mKernel.getRadius();//радиус
+
+
+	for (int i = -radius; i < radius; i++)
+	{
+		for (int j = -radius; j < radius; j++)
+		{
+			QColor tmp_color = img.pixelColor(x + i, y + j);
+			float tmp_intensity = 0;
+
+			int idx = (i + radius) * size + j + radius;
+			if ((mKernel[idx]) && (tmp_color.red() < min) && (tmp_color.green() < min) && (tmp_color.blue() < min))
+			{
+				min = 0;
+			}
+		}
+	}
+	result.setRgb(clamp<float>(min, 255.f, 0.f), clamp<float>(min, 255.f, 0.f), clamp<float>(min, 255.f, 0.f));
+	return result;
+}
+
+
+
+
+
+/*Median FIlter*/
+void sortcolor(float color[], int Ind)
+{
+	int tmp = 0;
+	for (int i = 0; i < Ind; i++)
+		for (int j = (Ind - 1); j >= (i + 1); j--)
+			if (color[j] < color[j - 1])
+			{
+				tmp = color[j];
+				color[j] = color[j - 1];
+				color[j - 1] = tmp;
+			}
+};
+float median(float color[], int Ind)
+{
+	int Indx = Ind / 2;
+	return color[Indx];
+};
+
+
+
+QColor MedianFilter::calcNewPixelColor(const QImage& img, int x, int y) const
+{
+	float returnR = 0;
+	float returnG = 0;
+	float returnB = 0;
+	int size = mKernel.getSize();
+	int radius = mKernel.getRadius();
+	float* colorR = new float[size * size];
+	float* colorG = new float[size * size];
+	float* colorB = new float[size * size];
+	
+	for (int i = -radius; i <= radius; i++)
+	{
+		for (int j = -radius; j <= radius; j++)
+		{
+			int idx = (i + radius) * size + j + radius;
+			QColor color = img.pixelColor(clamp(x + j, img.width() - 1, 0), clamp(y + i, img.height() - 1, 0));
+			colorR[idx] = float(color.red()) * mKernel[idx];
+			colorG[idx] = float(color.green()) * mKernel[idx];
+			colorB[idx] = float(color.blue()) * mKernel[idx];
+		}
+	}
+	sortcolor(colorR, size * size);
+	sortcolor(colorG, size * size);
+	sortcolor(colorB, size * size);
+	//returnR += color.red() * mKernel[idx];
+	//returnG += color.green() * mKernel[idx];
+	//returnB += color.blue() * mKernel[idx];
+	return QColor(clamp(median(colorR, size * size), 255.f, 0.f), clamp(median(colorG, size * size), 255.f, 0.f),
+		clamp(median(colorB, size * size), 255.f, 0.f));
+};
 
