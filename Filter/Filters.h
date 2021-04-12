@@ -267,6 +267,7 @@ public:
 	virtual ~LocationFilter() = default;
 };
 
+/*Перенос/сдвиг*/
 class ShiftFilter : public LocationFilter
 {
 public:
@@ -274,9 +275,161 @@ public:
 	
 };
 
+/* Фильтр "эффект стекла" */
 class GlassFilter : public LocationFilter
 {
 public:
 	QImage process(const QImage& img) const;
 	KL calcNewPixelLocation(int x, int y) const;
+};
+
+
+/*Филтр Motion Blur*/
+//ядро
+class MotionBlurKernel : public Kernel
+{
+public:
+	using Kernel::Kernel;
+	MotionBlurKernel(std::size_t radius = 1) :Kernel(radius)
+	{
+		int signed_radius = static_cast<int>(radius);
+		//расчитываем ядро линейного фильтра
+		for (int x = -signed_radius; x <= signed_radius; x++)
+		{
+			for (int y = -signed_radius; y <= signed_radius; y++)
+			{
+				std::size_t idx = (x + radius) * getSize() + (y + radius);
+				
+				if (x == y)
+				{
+					data[idx] = (float)1 / getSize();
+				}
+				else
+				{
+					data[idx] = 0;
+				}				
+				std::cout << data[idx]<<" ";
+			}
+			std::cout << "\n";
+		}
+	}
+
+};
+
+//фильтр
+class MotionBlurFilter : public MatrixFilter
+{
+public:
+	MotionBlurFilter(std::size_t radius = 1) : MatrixFilter(MotionBlurKernel(radius)) {}
+
+};
+
+/*Повышение резкости*/
+class UltraSharpnessKernel : public Kernel
+{
+public:
+	using Kernel::Kernel;
+	UltraSharpnessKernel(std::size_t radius = 1) :Kernel(radius)
+	{
+		data[0] = -1;  data[1] = -1;  data[2] = -1;
+		data[3] = -1;  data[4] = 9;   data[5] = -1;
+		data[6] = -1;  data[7] = -1;  data[8] = -1;
+	}
+};
+class UltraSharpnessFilter : public MatrixFilter
+{
+public:
+	UltraSharpnessFilter(std::size_t radius = 1) : MatrixFilter(UltraSharpnessKernel(radius)) {}
+};
+
+
+
+/*Математическая морфология*/
+//Чёрно-белый
+class BlackWhiteFilter : public Filter
+{
+public : 
+	QColor calcNewPixelColor(const QImage& img, int x, int y) const override;
+};
+
+
+
+class DilationKernel : public Kernel
+{
+public:
+	using Kernel::Kernel;
+	//конструктор предка
+	DilationKernel(std::size_t radius = 1) : Kernel(radius)//: Kernel(radius) это переача аргументов в конструктор предка
+	{
+		for (size_t i = 0; i < getLen(); i++)
+		{
+			data[i] = 1;
+		}
+	/*  data[0] = 1; data[1] = 1;   data[2] = 1;
+		data[3] = 1;  data[4] = 1;   data[5] = 1;
+		data[6] = 1;  data[7] = 1;   data[8] = 1;*/
+		
+	}
+};
+
+class DilationFilter : public MatrixFilter
+{
+public:
+	DilationFilter(std::size_t radius = 1) : MatrixFilter(DilationKernel(radius)) {}
+	QImage process(const QImage& img) const override; 
+	QColor calcNewPixelColor(const QImage& img, int x, int y) const override;
+};
+
+
+class ErosionKernel : public Kernel
+{
+public:
+	using Kernel::Kernel;
+	//конструктор предка
+	ErosionKernel(std::size_t radius = 1) : Kernel(radius)//: Kernel(radius) это переача аргументов в конструктор предка
+	{
+		for (size_t i = 0; i < getLen(); i++)
+		{
+			data[i] = 1;
+		}
+		/*  data[0] = 1; data[1] = 1;   data[2] = 1;
+			data[3] = 1;  data[4] = 1;   data[5] = 1;
+			data[6] = 1;  data[7] = 1;   data[8] = 1;*/
+
+	}
+};
+
+class ErosionFilter : public MatrixFilter
+{
+public:
+	ErosionFilter(std::size_t radius = 1) : MatrixFilter(ErosionKernel(radius)) {}
+	QImage process(const QImage& img) const override;
+	QColor calcNewPixelColor(const QImage& img, int x, int y) const override;
+};
+
+
+
+class MedianKernel : public Kernel
+{
+public:
+	using Kernel::Kernel;
+	MedianKernel(std::size_t radius = 1) : Kernel(radius)
+	{
+		int signed_radius = static_cast<int>(radius);
+		for (int i = -signed_radius; i <= signed_radius; i++)
+		{
+			for (int j = -signed_radius; j <= signed_radius; j++)
+			{
+				std::size_t idx = (i + radius) * getSize() + (j + radius);
+				data[idx] = 1;
+			}
+		}
+	}
+};
+
+class MedianFilter : public MatrixFilter
+{
+public:
+	MedianFilter(std::size_t radius = 2) : MatrixFilter(MedianKernel(radius)) {}
+	QColor calcNewPixelColor(const QImage& img, int x, int y) const override;
 };
