@@ -1,16 +1,18 @@
 #include <QtCore/QCoreApplication>
 #include <QImage>
 #include <iostream>
-#include <vector>
+#include <cstdlib>
+
 #include "Filters.h"
 using namespace std;
 int main(int argc, char* argv[])
 {
+    srand(1);
     string str;
-    QImage img;//–∫–ª–∞—Å—Å  QImage –ø–æ–∑–≤–æ–ª—è–µ—Ç —É–¥–æ–±–Ω—ã–π –∏–Ω–µ—Ä—Ñ–µ–π—Å –¥–ª—è —Ä–∞–±–æ—Ç—ã —Å –ø–∏–∫—Å–µ–ª—è–º–∏ –∏ –ø—Ä–µ–¥–æ—Å—Ç–∞–≤–ª—è–µ—Ç
-    //–º–µ—Ç–æ–¥—ã –æ–±—Ä–∞–±–æ—Ç–∫–∏ —Ü–≤–µ—Ç–∞ –ø–∏–∫—Å–µ–ª–µ–π  –∏ —Ç.–¥.
-
-    for (int i = 0; i < argc; i++)//–Ω–∞—Ö–æ–¥–∏–º –∞–¥—Ä–µ—Å –∫–∞—Ä—Ç–∏–Ω–∫–∏
+    QImage img;//ÍÎ‡ÒÒ  QImage ÔÓÁ‚ÓÎˇÂÚ Û‰Ó·Ì˚È ËÌÂÙÂÈÒ ‰Îˇ ‡·ÓÚ˚ Ò ÔËÍÒÂÎˇÏË Ë ÔÂ‰ÓÒÚ‡‚ÎˇÂÚ
+    //ÏÂÚÓ‰˚ Ó·‡·ÓÚÍË ˆ‚ÂÚ‡ ÔËÍÒÂÎÂÈ  Ë Ú.‰.
+    
+    for (int i = 0; i < argc; i++)//Ì‡ıÓ‰ËÏ ‡‰ÂÒ Í‡ÚËÌÍË
     {
         if (!strcmp(argv[i], "-p") && (i + 1 < argc))
         {
@@ -18,10 +20,10 @@ int main(int argc, char* argv[])
         }
 
     }
-    img.load(QString(str.c_str()));//–ø—Ä–µ–æ–±—Ä–∞–∑–æ–≤—ã–≤–∞–µ–º –ø–æ–ª—É—á–µ–Ω–Ω—ã–π –∞–¥—Ä–µ—Å –∏–∑ —Ñ–æ—Ä–º–∞—Ç–∞ string  –≤ c-—Å—Ç—Ä–æ–∫—É 
-    //–∏ –ø—Ä–µ–æ–±—Ä–∞–∑—É–µ–º –µ—ë –≤ —Ç–∏–ø  QString
-    //–ö–ª–∞—Å—Å QString –ø—Ä–µ–¥–æ—Å—Ç–∞–≤–ª—è–µ—Ç —Å–∏–º–≤–æ–ª—å–Ω—É—é —Å—Ç—Ä–æ–∫—É Unicode.
-   // img.save("Images\\Source1.png");//—Å–æ—Ö—Ä–∞–Ω—è–µ–º –∫–∞—Ä—Ç–∏–Ω–∫—É –≤ –ø–∞–ø–∫—É Images
+    img.load(QString(str.c_str()));//ÔÂÓ·‡ÁÓ‚˚‚‡ÂÏ ÔÓÎÛ˜ÂÌÌ˚È ‡‰ÂÒ ËÁ ÙÓÏ‡Ú‡ string  ‚ c-ÒÚÓÍÛ 
+    //Ë ÔÂÓ·‡ÁÛÂÏ Â∏ ‚ ÚËÔ  QString
+    // Î‡ÒÒ QString ÔÂ‰ÓÒÚ‡‚ÎˇÂÚ ÒËÏ‚ÓÎ¸ÌÛ˛ ÒÚÓÍÛ Unicode.
+   // img.save("Images\\Source1.png");//ÒÓı‡ÌˇÂÏ Í‡ÚËÌÍÛ ‚ Ô‡ÔÍÛ Images
 
    
 
@@ -29,24 +31,52 @@ int main(int argc, char* argv[])
   //    invert.process(img).save(QString("Images\\Invert1.png"));
   // BlurFilter blur;
   //    blur.process(img).save(QString("Images\\Blur2.png"));
-  //GaussianFilter gauss;
-  //    gauss.process(img).save(QString("Images\\Gauss2.png"));
-  //GrayScaleFilter gray_scale;
-  //    gray_scale.process(img).save(QString("Images\\GreyScale1.png"));
-  //SepiaFilter sepia;
-  //    sepia.process(img).save(QString("Images\\GreyScale1.png"));
+ /* GaussianFilter gauss;
+      gauss.process(img).save(QString("Images\\Gauss1.png"));*/
+ /* GrayScaleFilter gray_scale;
+      gray_scale.process(img).save(QString("Images\\GreyScale1.png"));*/
+ /* SepiaFilter sepia;
+      sepia.process(img).save(QString("Images\\Sepia1.png"));*/
   //IntensityUP intensity_up;
   //    intensity_up.process(img).save(QString("Images\\IntensityUP1.png"));
-  /*SobelFilter sobel;
-  sobel.process(img).save(QString("Images\\Sobel1.png"));*/
+  SobelFilter sobel;
+  GrayScaleFilter gray_scale;
+  QImage sbl;
+  sbl =sobel.process(img);
+  gray_scale.process(sbl).save(QString("Images\\Sobel1_grey.png"));
   //SharpnessUPFilter sharpness;;
   //    sharpness.process(img).save(QString("Images\\Sharpness1.png"));
    /* GreyWorldFilter grey_world;
     grey_world.process(img).save(QString("Images\\GreyWorld1.png"));*/
     //HistugrammFilter hist;
     //hist.process(img).save(QString("Images\\Hist5.png"));
-    ShiftFilter shift;
-    shift.process(img).save(QString("Images\\Shift1.png"));
+  /*  ShiftFilter shift;
+    shift.process(img).save(QString("Images\\Shift1.png"));*/
+    //GlassFilter glass;
+    //glass.process(img).save(QString("Images\\Glass1.png"));
 
+    //MotionBlurFilter motion_blur(4);
+    //motion_blur.process(img).save(QString("Images\\MotionBlur1.png"));
+    /*UltraSharpnessFilter ultra_sharpness;
+    ultra_sharpness.process(img).save(QString("Images\\`UltraSharpness1.png"));*/
+   /* BlackWhiteFilter bw;
+   bw.process(img).save(QString("Images\\BlackWhiteFilter.png"));*/
+  
+
+  /*  DilationFilter dilation(3);
+    dilation.process(img).save(QString("Images\\Dilation6.png"));*/
+    //ErosionFilter erosion(2);
+    //erosion.process(img).save(QString("Images\\Erosion6.png"));
+   /* MedianFilter median(5);
+    median.process(img).save(QString("Images\\Median1.png")); */
+
+  /*  OpeningFilter opening;
+    opening.process(img).save(QString("Images\\Opening6_inv_noi.png")); */
+
+    /*ClosingFilter closing;
+    closing.process(img).save(QString("Images\\Opening6_noi.png"));*/
+
+    //TopHatFilter top_hat;
+    //top_hat.process(img).save(QString("Images\\TopHat7.png"));
     return 0;
 }

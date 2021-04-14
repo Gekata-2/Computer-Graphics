@@ -1,4 +1,4 @@
-#include "Filters.h"
+﻿#include "Filters.h"
 #include<math.h>
 
 template <class T>
@@ -134,15 +134,13 @@ QColor SobelFilter::calcNewPixelColor(const QImage& img, int x, int y) const // 
 	float returnR = 0;
 	float returnG = 0;
 	float returnB = 0;
+	float GyR=0, GyG=0, GyB=0;
+	float GxR=0, GxG=0, GxB=0;
 	int size = mKernel.getSize();//получаем размер
 	int radius = mKernel.getRadius();//радиус
-	float return_intensity=0;
-	//std::cout << mKernel[0] << mKernel[1] << mKernel[2] <<
-	//	mKernel[3] << mKernel[4] << mKernel[5]
-	//	<< mKernel[6] << mKernel[7] << mKernel[8];
-	//Переменные i и j принимают значения от -radius
-	//до radius и означают положение точки в матрице ядра, если начало отсчета
-	//поместить в центр матрицы,т.е. если  i =0 и j=0 это центр,то i=-redius,j=-redius это левый верхний угол
+	
+
+	
 	for (int i = -radius; i <= radius; i++)//проходим по ядру и высчитываем новые r g b 
 	{
 		for (int j = -radius; j <= radius; j++)
@@ -155,35 +153,23 @@ QColor SobelFilter::calcNewPixelColor(const QImage& img, int x, int y) const // 
 			//получаем значения r g b текущего обрабатываемого пикселя, при этом проверяем чтобы координаты положения пикселя были в пределах картинки
 			//для ширины и высоты отдельно
 		
+			//берём цвет пикселя 
 			QColor color = img.pixelColor(clamp<float>(x + j, img.width() - 1, 0), clamp<float>(y + i, img.height() - 1, 0));
-			float intensity = 0.299 * color.red() + 0.587 * color.green() + 0.144 * color.blue();
-
-			//float intensityX = clamp<float>(intensity * mKernel[idxX] , 255.f, 0.f);
-			//float intensityY = clamp<float>(intensity * mKernel[idxY] , 255.f, 0.f);
-			//float returnRX=0,returnGX=0,returnBX=0;
-			//float returnRY=0, returnGY=0, returnBY=0;
-			////высчитываем новые значения цветов
-			////для каждого цвета r g b 
-			////умножаем текущие значения на цветовой коэффициент
-			//returnRX += clamp<float>(color.red() * mKernel[idxX], 255.f, 0.f);
-			//returnRY += clamp<float>(color.red() * mKernel[idxY], 255.f, 0.f);
-			//returnGX += clamp<float>(color.green() * mKernel[idxX], 255.f, 0.f);
-			//returnGY += clamp<float>(color.green()* mKernel[idxY], 255.f, 0.f);
-			//returnBX += clamp<float>(color.blue() * mKernel[idxX], 255.f, 0.f);
-			//returnBY += clamp<float>(color.blue() * mKernel[idxY], 255.f, 0.f);
-			//
-			//returnR += std::sqrt(returnRX * returnRX + returnRY * returnRY);
-			//returnG += std::sqrt(returnGX * returnGX + returnGY * returnGY);
-			//returnB += std::sqrt(returnBX * returnBX + returnBY * returnBY);
-			//return_intensity = std::sqrt(intensityX * intensityX + intensityY * intensityY);
-			returnR += color.red() * mKernel[idxY];
-			returnG += color.green() * mKernel[idxY];
-			returnB += color.blue() * mKernel[idxY];
-
-			/*returnG += color.green() * mKernel[idx];
-			returnB += color.blue() * mKernel[idx];*/
+					
+			//считаем переходы по вертикали 
+			GyR += color.red() * mKernel[idxY];
+			GyG += color.green() * mKernel[idxY];
+			GyB += color.blue() * mKernel[idxY];
+			//считаем переходы по горизонтали
+			GxR += color.red() * mKernel[idxX];
+			GxG += color.green() * mKernel[idxX];
+			GxB += color.blue() * mKernel[idxX];
+			
 		}
 	}
+	returnR = std::sqrt(GyR * GyR + GxR * GxR);
+	returnG = std::sqrt(GyG * GyG + GxG * GxG);
+	returnB = std::sqrt(GyB * GyB + GxB * GxB);
 
 	//возвращаем полученный цвет
 	return QColor(clamp<float>(returnR, 255.f, 0.f), clamp<float>(returnG, 255.f, 0.f), clamp<float>(returnB, 255.f, 0.f));
@@ -308,6 +294,9 @@ void HistugrammFilter::intensities_range_calc(const QImage& img)
 
 }
 
+
+
+
 QImage LocationFilter::process(const QImage& img) const 
 {
 	QImage result(img);//создаём переменную-картинку-результат
@@ -354,19 +343,17 @@ QImage LocationFilter::process(const QImage& img) const
 
 
 
-/* 
-	𝑥(𝑘, 𝑙) = 𝑘 + 50;
-    𝑦(𝑘, 𝑙) = 𝑙;
-*/
+///* 
+//	𝑥(𝑘, 𝑙) = 𝑘 + 50;
+//    𝑦(𝑘, 𝑙) = 𝑙;
+//*/
 LocationFilter::KL ShiftFilter::calcNewPixelLocation(int x, int y) const
 {
 	KL result;
-	result.k = x + 50;
-	result.l = y-250;
+	result.k = x - 50;
+	result.l = y + 50;
 	return result;
 }
-
-
 
 
 
@@ -379,30 +366,34 @@ QImage GlassFilter::process(const QImage& img) const
 		for (int y = 0; y < img.height(); y++)
 		{
 
-			QColor color = img.pixelColor(x, y);//считываем цвет текущего пиксле (x,y) исходного изображения
-			KL result_kl = calcNewPixelLocation(x, y);//высчитываем его положение в новой картинке (x,y) - > (k,l)
-			//больше границ
+			//QColor color = img.pixelColor(x, y);//считываем цвет текущего пиксле (x,y) исходного изображения
+			KL result_kl = calcNewPixelLocation(x, y);//высчитываем откуда брать значение для текущего пикселя (x,y)
+			
+		
+			//Если вышли за границы картинки ,то оставляем пиксель без изменений
 			if (result_kl.k >= img.width())
 			{
-				result_kl.k = img.width()-1;				
+				result_kl.k = x;				
 			}
 			if (result_kl.k <= 0)
 			{
-				result_kl.k = 0;//result_kl.k<0
+				result_kl.k =x;//result_kl.k<0
 			
 			}
 			//меньше границ
 			if (result_kl.l >= img.height())
 			{
-				result_kl.l =img.height()-1;
+				result_kl.l =y;
 			
 			}
 			if (result_kl.l <= 0)
 			{
-				result_kl.l = 0;//result_kl.l<0
+				result_kl.l =y;//result_kl.l<0
 			}
-			//записываем в полученное местоположение цвет текущего пикселя
-			result.setPixelColor(result_kl.k, result_kl.l, color);
+			//после того как высчитали координаты пикселя от которого будем брать цвет 
+			QColor	color= img.pixelColor(result_kl.k, result_kl.l);
+			//записываем полученный цвет в наш текущий пиксель
+			result.setPixelColor(x, y, color);
 		}
 	}
 	//возвращаем полученное изображение
@@ -418,8 +409,8 @@ QImage GlassFilter::process(const QImage& img) const
 LocationFilter::KL GlassFilter::calcNewPixelLocation(int x, int y) const
 {
 	KL result;
-	result.k = x+ (rand()%6-3)*10;
-	result.l = y +(rand()%6-3)*10;
+	result.k = x- (float(rand()%101)/100-0.5)*10;
+	result.l = y -(float(rand()%101)/100-0.5)*10;
 	return result;
 }
 
@@ -618,3 +609,37 @@ QColor MedianFilter::calcNewPixelColor(const QImage& img, int x, int y) const
 		clamp(median(colorB, size * size), 255.f, 0.f));
 };
 
+
+
+
+
+
+QImage TopHatFilter::process(const QImage& img) const
+{
+	ErosionFilter erosion(3);
+	QImage result(img);
+	QImage temp;
+	temp = erosion.process(img);
+
+	for (int x = 0; x < img.width(); x++)
+	{
+		for (int y = 0; y < img.height(); y++)
+		{
+			QColor color, color_a, color_ero;
+			int colorR = 0, colorB = 0, colorG = 0;
+
+			color_a = img.pixelColor(x, y);//цвет пикселя исходной картинки
+			color_ero = temp.pixelColor(x, y);//цвет пикселя картинки после эрозии 
+
+			//находим разность этих цветов по каналам
+			colorR = color_a.red() - color_ero.red();
+			colorB = color_a.blue() - color_ero.blue();
+			colorG = color_a.green() - color_ero.green();
+			color.setRgb(clamp<float>(colorR, 255.f, 0.f), clamp<float>(colorB, 255.f, 0.f), clamp<float>(colorG, 255.f, 0.f));
+			//в результирующей картинке устанавливаем этот пиксель(x,y) в новый цвет color
+			result.setPixelColor(x, y, color);
+		}
+	}
+
+	return result;
+}

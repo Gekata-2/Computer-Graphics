@@ -1,0 +1,2 @@
+C:\Users\Kek\source\repos\Filter\x64\Debug\Filter.exe
+D:\Visual Studio 2019\Projects\Filter\x64\Debug\Filter.exe

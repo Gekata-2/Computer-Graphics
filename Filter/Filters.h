@@ -1,6 +1,7 @@
 #pragma once
 #include <QImage>
 #include <iostream>
+#include <cstdlib>
 
 /**
 * Функция для приведения значений к допустимому диапазону значений между max и min
@@ -129,12 +130,16 @@ public:
 				std::size_t idx = (x + radius) * getSize() + (y + radius);
 				data[idx] = std::exp(-(x * x + y * y) / (sigma * sigma));
 				norm += data[idx];
+				std::cout <<data[idx]<<" ";
 			}
+			std::cout << "\n";
 		}
 		//нормируем ядро
+		std::cout << "Norm:\n";
 		for (std::size_t i = 0; i <getLen(); i++)
 		{
 			data[i] /= norm;
+			std::cout << data[i] << " ";
 		}
 	}
 };
@@ -252,7 +257,20 @@ public:
 };
 
 /*Фильтры индексации пикселей*/
-
+//
+//class ShiftFilter : public Filter
+//{
+//protected:
+//		struct 
+//		{
+//			int k;
+//			int l;
+//		} typedef KL;
+//public:
+//	QColor calcNewPixelColor(const QImage& img, int x, int y) const override;
+//	QImage process(const QImage& img) const override;
+//	KL calcFromWhereTakeColor(int x,int y) const;
+//};
 class LocationFilter 
 {
 protected:
@@ -353,7 +371,7 @@ public :
 };
 
 
-
+/*Dilation*/
 class DilationKernel : public Kernel
 {
 public:
@@ -380,7 +398,7 @@ public:
 	QColor calcNewPixelColor(const QImage& img, int x, int y) const override;
 };
 
-
+/*Erosion*/
 class ErosionKernel : public Kernel
 {
 public:
@@ -408,7 +426,7 @@ public:
 };
 
 
-
+/*Median Filter*/
 class MedianKernel : public Kernel
 {
 public:
@@ -432,4 +450,52 @@ class MedianFilter : public MatrixFilter
 public:
 	MedianFilter(std::size_t radius = 2) : MatrixFilter(MedianKernel(radius)) {}
 	QColor calcNewPixelColor(const QImage& img, int x, int y) const override;
+};
+
+
+
+/*Opening*/
+/*erosion -> dilation*/
+class OpeningFilter 
+{
+
+public:
+	QImage process(const QImage& img) const 
+	{
+		DilationFilter dilation(2);
+	ErosionFilter erosion(2);
+		QImage result;
+		QImage temp;
+		temp = erosion.process(img);
+		result = dilation.process(temp);
+		return result;
+	}
+};
+
+
+/*Opening*/
+/*dilation -> erosion*/
+class ClosingFilter
+{
+
+public:
+	QImage process(const QImage& img) const
+	{
+		DilationFilter dilation(2);
+		ErosionFilter erosion(2);
+		QImage result;
+		QImage temp;
+		temp = dilation.process(img);
+		result = erosion.process(temp);
+		return result;
+	}
+};
+
+
+/*Top hat*/
+class TopHatFilter
+{
+public:
+	QImage process(const QImage& img) const;
+
 };
